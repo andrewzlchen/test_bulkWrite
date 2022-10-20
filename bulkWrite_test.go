@@ -17,7 +17,7 @@ func createUpdate(numElements int) []mongo.WriteModel {
 	for i := 0; i < numElements; i++ {
 		writes = append(writes, mongo.NewUpdateOneModel().
 			SetFilter(bson.D{{"name", fmt.Sprintf("name%d", time.Now().Unix())}}).
-			SetUpdate(bson.D{{"%set", bson.D{{"foo", "bar"}}}}),
+			SetUpdate(bson.D{{"$set", bson.D{{"foo", "bar"}}}}),
 		)
 	}
 	return writes
@@ -30,9 +30,10 @@ func BenchmarkBulkWrite(b *testing.B) {
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
 		b.Errorf("failed to create client: %s", err)
+		b.Fail()
 	}
 
-	coll := client.Database("test").Collection("test")
+	coll := client.Database("foo").Collection("bar")
 
 	b.Run("when writing 1000 updates", func(b *testing.B) {
 
@@ -41,7 +42,11 @@ func BenchmarkBulkWrite(b *testing.B) {
 				b.StopTimer()
 				updates := createUpdate(1)
 				b.StartTimer()
-				coll.BulkWrite(context.Background(), updates)
+				_, err := coll.BulkWrite(context.Background(), updates)
+				if err != nil {
+					fmt.Printf("failed to bulkWrite: %s\n", err)
+					b.Fail()
+				}
 				b.StopTimer()
 			}
 		})
@@ -51,7 +56,11 @@ func BenchmarkBulkWrite(b *testing.B) {
 				b.StopTimer()
 				updates := createUpdate(10)
 				b.StartTimer()
-				coll.BulkWrite(context.Background(), updates)
+				_, err := coll.BulkWrite(context.Background(), updates)
+				if err != nil {
+					fmt.Printf("failed to bulkWrite: %s\n", err)
+					b.Fail()
+				}
 				b.StopTimer()
 			}
 		})
@@ -61,7 +70,11 @@ func BenchmarkBulkWrite(b *testing.B) {
 				b.StopTimer()
 				updates := createUpdate(100)
 				b.StartTimer()
-				coll.BulkWrite(context.Background(), updates)
+				_, err := coll.BulkWrite(context.Background(), updates)
+				if err != nil {
+					fmt.Printf("failed to bulkWrite: %s\n", err)
+					b.Fail()
+				}
 				b.StopTimer()
 			}
 		})
@@ -71,7 +84,11 @@ func BenchmarkBulkWrite(b *testing.B) {
 				b.StopTimer()
 				updates := createUpdate(1000)
 				b.StartTimer()
-				coll.BulkWrite(context.Background(), updates)
+				_, err := coll.BulkWrite(context.Background(), updates)
+				if err != nil {
+					fmt.Printf("failed to bulkWrite: %s\n", err)
+					b.Fail()
+				}
 				b.StopTimer()
 			}
 		})
